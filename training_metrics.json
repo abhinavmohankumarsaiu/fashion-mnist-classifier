@@ -1,0 +1,9 @@
+{
+  "artifact": "fashion_cnn_model.keras",
+  "epochs": 10,
+  "test_accuracy": 0.9088000059127808,
+  "test_loss": 0.29234448075294495,
+  "trained_on": "Fashion-MNIST training split",
+  "evaluated_on": "Fashion-MNIST test split"
+}
+
