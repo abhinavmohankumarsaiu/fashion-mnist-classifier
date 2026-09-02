@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion-MNIST CNN Classifier</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<main class="page">
+    <section class="card">
+        <div class="badge">Deep Learning Deployment</div>
+        <h1>Fashion-MNIST CNN Classifier</h1>
+        <p class="subtitle">
+            Upload a Fashion-MNIST-like clothing image and classify it using your trained CNN.
+        </p>
+
+        <form id="uploadForm">
+            <label class="drop-zone" for="imageFile">
+                <input id="imageFile" type="file" accept="image/*" required>
+                <span class="drop-title">Choose an image</span>
+                <span class="drop-help">JPG, JPEG, PNG or WEBP · Max 10 MB</span>
+            </label>
+
+            <div id="previewWrap" class="preview-wrap hidden">
+                <img id="preview" alt="Image preview">
+            </div>
+
+            <button id="submitButton" type="submit">Classify Image</button>
+        </form>
+
+        <div id="status" class="status"></div>
+        <div id="result" class="result hidden"></div>
+
+        <p class="note">
+            Note: This CNN is trained on 28×28 grayscale Fashion-MNIST images.
+            Real-world photographs may not classify reliably.
+        </p>
+    </section>
+</main>
+<script src="/js/script.js"></script>
+</body>
+</html>
+
