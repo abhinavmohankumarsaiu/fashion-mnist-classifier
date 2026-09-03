@@ -3,5 +3,3 @@ __pycache__/
 .venv/
 *.py[cod]
 .DS_Store
-fashion_cnn_model.keras
-

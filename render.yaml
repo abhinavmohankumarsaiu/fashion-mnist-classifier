@@ -3,7 +3,7 @@ services:
     name: fashion-mnist-classifier
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt && python train_model.py
+    buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
@@ -11,4 +11,3 @@ services:
         value: 3.11.10
       - key: ALLOWED_ORIGINS
         value: https://fashion-ai-mnist.abhinav261065.chatgpt.site,http://localhost:3000
-

@@ -1,104 +1,18 @@
-const form = document.getElementById("uploadForm");
-const fileInput = document.getElementById("imageFile");
-const preview = document.getElementById("preview");
-const previewWrap = document.getElementById("previewWrap");
-const result = document.getElementById("result");
-const statusBox = document.getElementById("status");
-const button = document.getElementById("submitButton");
-
-fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
-
-    if (!file) {
-        previewWrap.classList.add("hidden");
-        return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-        statusBox.textContent = "Please select an image smaller than 10 MB.";
-        fileInput.value = "";
-        previewWrap.classList.add("hidden");
-        return;
-    }
-
-    statusBox.textContent = "";
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        preview.src = event.target.result;
-        previewWrap.classList.remove("hidden");
-    };
-    reader.readAsDataURL(file);
-});
-
-form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const file = fileInput.files[0];
-
-    if (!file) {
-        statusBox.textContent = "Please select an image first.";
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    button.disabled = true;
-    button.textContent = "Classifying...";
-    statusBox.textContent = "";
-    result.innerHTML = "";
-    result.classList.add("hidden");
-
-    try {
-        let response;
-        for (let attempt = 0; attempt < 2; attempt += 1) {
-            response = await fetch("/api/predict", {
-                method: "POST",
-                body: formData
-            });
-            if (response.status !== 503 || attempt === 1) break;
-            await new Promise((resolve) => setTimeout(resolve, 1800));
-        }
-
-        const contentType = response.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) {
-            throw new Error("Server returned an invalid response.");
-        }
-
-        const rawBody = await response.text();
-        if (!rawBody) throw new Error("Server returned an empty response.");
-
-        let data;
-        try {
-            data = JSON.parse(rawBody);
-        } catch {
-            throw new Error("Server returned invalid JSON. Please try again.");
-        }
-
-        if (!response.ok) {
-            throw new Error(data.detail || "Prediction failed.");
-        }
-
-        let html = "<h2>Top Predictions</h2>";
-
-        data.predictions.forEach((item) => {
-            html += `
-                <div class="prediction">
-                    <span class="class-name">${item.class}</span>
-                    <span class="confidence">${item.confidence}%</span>
-                </div>
-            `;
-        });
-
-        result.innerHTML = html;
-        result.classList.remove("hidden");
-    } catch (error) {
-        console.error(error);
-        statusBox.textContent = error.message;
-    } finally {
-        button.disabled = false;
-        button.textContent = "Classify Image";
-    }
-});
-
+const classes=['T-shirt / top','Trouser','Pullover','Dress','Coat','Sandal','Shirt','Sneaker','Bag','Ankle boot'];
+const promptAnswers={classes:`I can identify all 10 Fashion-MNIST categories: ${classes.join(', ')}.`,method:'The model converts your image to grayscale, resizes it to 28 × 28 pixels, and compares its learned visual patterns across the 10 Fashion-MNIST classes.',format:'For the clearest result, upload a centered clothing item as a PNG, JPG, or WebP. The model will resize and convert it to the 28 × 28 grayscale format it expects.'};
+const elements={sidebar:document.getElementById('sidebar'),scrim:document.getElementById('scrim'),menu:document.getElementById('menuButton'),conversation:document.getElementById('conversation'),messages:document.getElementById('messageList'),quick:document.getElementById('quickPrompts'),prompt:document.getElementById('prompt'),file:document.getElementById('imageFile'),upload:document.getElementById('uploadButton'),send:document.getElementById('sendButton'),attachment:document.getElementById('attachmentPreview'),preview:document.getElementById('previewImage'),fileName:document.getElementById('fileName'),remove:document.getElementById('removeImage'),status:document.getElementById('modelStatus'),statusDot:document.getElementById('statusDot')};
+let selectedFile=null,previewUrl=null,busy=false;
+function escapeHtml(value){return String(value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
+function updateSendState(){elements.send.disabled=busy||(!elements.prompt.value.trim()&&!selectedFile);}
+function closeSidebar(){elements.sidebar.classList.remove('sidebar-open');elements.scrim.classList.remove('visible');}
+function scrollToLatest(){elements.conversation.scrollTop=elements.conversation.scrollHeight;}
+function clearAttachment(){selectedFile=null;elements.file.value='';elements.attachment.classList.add('hidden');if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;updateSendState();}
+function addMessage(role,text,options={}){elements.conversation.classList.add('has-messages');elements.conversation.classList.remove('empty-conversation');elements.quick.classList.add('hidden');const article=document.createElement('article');article.className=`message ${role}`;const avatar=role==='assistant'?'✦':'You';const name=role==='assistant'?'FashionAI':'You';let content=`<div class="message-avatar">${avatar}</div><div class="message-body"><div class="message-name">${name}</div>`;if(options.image)content+=`<img src="${options.image}" alt="Uploaded fashion item" class="message-image">`;if(text)content+=`<p>${escapeHtml(text)}</p>`;if(options.predictions?.length){content+='<div class="probability-card" aria-label="Prediction confidence">';options.predictions.forEach((item,index)=>{const confidence=Number(item.confidence||0);content+=`<div class="probability-row"><div class="probability-label"><span>${escapeHtml(item.label)}</span><strong>${Math.round(confidence*100)}%</strong></div><div class="track"><span class="${index?'muted-bar':''}" style="width:${Math.max(0,Math.min(100,confidence*100))}%"></span></div></div>`;});content+='</div>';}article.innerHTML=`${content}</div>`;elements.messages.appendChild(article);scrollToLatest();return article;}
+function addTyping(){const article=document.createElement('article');article.className='message assistant';article.id='typingMessage';article.innerHTML='<div class="message-avatar">✦</div><div class="typing"><span></span><span></span><span></span></div>';elements.messages.appendChild(article);scrollToLatest();}
+async function classify(file){const form=new FormData();form.append('file',file);let response;for(let attempt=0;attempt<2;attempt+=1){response=await fetch('/predict',{method:'POST',body:form});if(response.status!==503||attempt===1)break;await new Promise(resolve=>setTimeout(resolve,1800));}const raw=await response.text();let data={};if(raw){try{data=JSON.parse(raw);}catch{throw new Error('The classifier returned an invalid response. Please try again.');}}if(!response.ok)throw new Error(data.detail||`The classifier is unavailable (${response.status}).`);if(!data.prediction||!Array.isArray(data.alternatives))throw new Error('The classifier response is incomplete.');return[data.prediction,...data.alternatives];}
+async function send(forcedAnswer){if(busy)return;const text=elements.prompt.value.trim();if(!text&&!selectedFile&&!forcedAnswer)return;const currentFile=selectedFile,currentImage=previewUrl;addMessage('user',text||(currentFile?'Classify this fashion item.':forcedAnswer.question),{image:currentImage});elements.prompt.value='';if(!currentFile){addMessage('assistant',forcedAnswer?.answer||promptAnswers.method);updateSendState();return;}selectedFile=null;elements.file.value='';elements.attachment.classList.add('hidden');busy=true;elements.status.textContent='Analyzing image…';elements.statusDot.classList.add('busy-dot');updateSendState();addTyping();try{const predictions=await classify(currentFile);document.getElementById('typingMessage')?.remove();addMessage('assistant',`This looks like a ${predictions[0].label.toLowerCase()}.`,{predictions});}catch(error){document.getElementById('typingMessage')?.remove();addMessage('assistant',error instanceof Error?error.message:'I could not classify that image.');}finally{busy=false;elements.status.textContent='Model ready';elements.statusDot.classList.remove('busy-dot');previewUrl=null;updateSendState();}}
+function newChat(){elements.messages.innerHTML='';elements.conversation.classList.remove('has-messages');elements.conversation.classList.add('empty-conversation');elements.quick.classList.remove('hidden');elements.prompt.value='';clearAttachment();closeSidebar();}
+elements.menu.addEventListener('click',()=>{elements.sidebar.classList.add('sidebar-open');elements.scrim.classList.add('visible');});elements.scrim.addEventListener('click',closeSidebar);document.getElementById('newChatButton').addEventListener('click',newChat);document.getElementById('brandButton').addEventListener('click',newChat);elements.upload.addEventListener('click',()=>elements.file.click());elements.remove.addEventListener('click',clearAttachment);
+elements.file.addEventListener('change',()=>{const file=elements.file.files?.[0];if(!file)return;if(file.size>10*1024*1024){addMessage('assistant','Please select an image smaller than 10 MB.');clearAttachment();return;}selectedFile=file;if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=URL.createObjectURL(file);elements.preview.src=previewUrl;elements.fileName.textContent=file.name;elements.attachment.classList.remove('hidden');updateSendState();});
+elements.prompt.addEventListener('input',updateSendState);elements.prompt.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();void send();}});elements.send.addEventListener('click',()=>void send());elements.quick.addEventListener('click',event=>{const button=event.target.closest('[data-prompt]');if(!button)return;const key=button.dataset.prompt;void send({question:button.textContent.replace('↗','').trim(),answer:promptAnswers[key]});});document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();newChat();elements.prompt.focus();}});
+fetch('/health').then(response=>response.ok?response.json():Promise.reject()).then(data=>{if(data.ready===false)elements.status.textContent='Model warming up…';}).catch(()=>{elements.status.textContent='Model reconnecting…';});

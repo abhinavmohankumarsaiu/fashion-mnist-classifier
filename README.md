@@ -1,8 +1,8 @@
 # Fashion-MNIST CNN Classifier
 
 A complete FastAPI deployment for the supplied Fashion-MNIST CNN notebook and
-training package. It trains the missing Keras model, serves predictions, and
-provides the response contract used by the FashionAI chat frontend.
+trained model. It serves predictions and includes the responsive FashionAI chat
+frontend in the same Render application.
 
 ## Correct label mapping
 
@@ -57,12 +57,11 @@ most reliable results still come from one centered item on a plain background.
 
 ## Deploy on Render
 
-Push the repository, create a Blueprint from `render.yaml`, and wait for
-the build to train and save `fashion_cnn_model.keras`. Then wait for `/health`
-to return `"ready": true`. Set the chat frontend environment variable
-to:
+Push the repository, create a Blueprint from `render.yaml`, and wait for the
+build to install the application dependencies. The trained
+`fashion_cnn_model.keras` file is already included at the repository root, as
+required by the assignment. Then wait for `/health` to return `"ready": true`.
 
 ```text
 NEXT_PUBLIC_PREDICT_ENDPOINT=https://YOUR-SERVICE.onrender.com/predict
 ```
-

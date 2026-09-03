@@ -1,44 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fashion-MNIST CNN Classifier</title>
-    <link rel="stylesheet" href="/css/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A conversational Fashion-MNIST clothing classifier powered by a trained CNN.">
+  <meta name="theme-color" content="#1d8c62">
+  <title>FashionAI — Fashion-MNIST Classifier</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<main class="page">
-    <section class="card">
-        <div class="badge">Deep Learning Deployment</div>
-        <h1>Fashion-MNIST CNN Classifier</h1>
-        <p class="subtitle">
-            Upload a Fashion-MNIST-like clothing image and classify it using your trained CNN.
-        </p>
-
-        <form id="uploadForm">
-            <label class="drop-zone" for="imageFile">
-                <input id="imageFile" type="file" accept="image/*" required>
-                <span class="drop-title">Choose an image</span>
-                <span class="drop-help">JPG, JPEG, PNG or WEBP · Max 10 MB</span>
-            </label>
-
-            <div id="previewWrap" class="preview-wrap hidden">
-                <img id="preview" alt="Image preview">
+  <main class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Chat navigation">
+      <div>
+        <button class="brand" id="brandButton" type="button" aria-label="Start a new chat">
+          <span class="brand-mark">F</span><span>Fashion<span>AI</span></span>
+        </button>
+        <button class="new-chat" id="newChatButton" type="button"><span>＋</span> New classification <kbd>Ctrl K</kbd></button>
+        <p class="section-label">Today</p>
+        <button class="history active" type="button"><span class="history-icon">◌</span><span>Fashion item classifier<small>Just now</small></span><b>•••</b></button>
+        <p class="section-label faded">Previous 7 days</p>
+        <button class="history" type="button"><span class="history-icon">◌</span><span>Understanding Fashion-MNIST<small>Dataset overview</small></span></button>
+      </div>
+      <div class="sidebar-bottom">
+        <div class="dataset-card"><span>10</span><div><strong>Fashion classes</strong><small>Powered by Fashion-MNIST</small></div></div>
+        <div class="profile"><span class="avatar">XC</span><span><strong>My workspace</strong><small>Personal</small></span><b>···</b></div>
+      </div>
+    </aside>
+    <button class="scrim" id="scrim" type="button" aria-label="Close navigation"></button>
+    <section class="chat-panel">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu" id="menuButton" type="button" aria-label="Open navigation">☰</button>
+          <div><strong>Fashion classifier</strong><span><i id="statusDot"></i><span id="modelStatus">Model ready</span></span></div>
+        </div>
+        <div class="top-actions"><button type="button" title="Share">↗</button><button type="button" title="More options">•••</button></div>
+      </header>
+      <div class="conversation empty-conversation" id="conversation">
+        <section class="welcome" id="welcome">
+          <div class="hero-icon" aria-hidden="true"><span>✦</span></div>
+          <h1>What are you wearing?</h1>
+          <p>Upload a clothing image and I’ll identify which<br class="desktop-break"> Fashion-MNIST category it belongs to.</p>
+          <div class="class-chips" aria-label="Supported classes">
+            <span>T-shirt</span><span>Trouser</span><span>Dress</span><span>Coat</span><span>Sandal</span><span>Sneaker</span><span>Bag</span><span>Ankle boot</span><span class="more-chip">+2 more</span>
+          </div>
+        </section>
+        <div class="message-list" id="messageList" aria-live="polite"></div>
+      </div>
+      <div class="composer-zone">
+        <div class="quick-prompts" id="quickPrompts">
+          <button type="button" data-prompt="classes">What classes can you recognize?<span>↗</span></button>
+          <button type="button" data-prompt="method">How does the model make a prediction?<span>↗</span></button>
+          <button type="button" data-prompt="format">What image format works best?<span>↗</span></button>
+        </div>
+        <div class="attachment-preview hidden" id="attachmentPreview">
+          <img id="previewImage" alt="Selected upload">
+          <div><strong id="fileName"></strong><span>Ready to classify</span></div>
+          <button id="removeImage" type="button" aria-label="Remove image">×</button>
+        </div>
+        <div class="composer">
+          <textarea id="prompt" rows="1" placeholder="Ask about fashion or upload an image…" aria-label="Message"></textarea>
+          <div class="composer-actions">
+            <div>
+              <input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+              <button class="attach" id="uploadButton" type="button" aria-label="Upload an image">⌕<span>Upload image</span></button>
+              <button class="model-pill" type="button" title="Deployed CNN model — 90.88% test accuracy"><i></i> CNN · 90.88% <span>⌄</span></button>
             </div>
-
-            <button id="submitButton" type="submit">Classify Image</button>
-        </form>
-
-        <div id="status" class="status"></div>
-        <div id="result" class="result hidden"></div>
-
-        <p class="note">
-            Note: This CNN is trained on 28×28 grayscale Fashion-MNIST images.
-            Real-world photographs may not classify reliably.
-        </p>
+            <button class="send" id="sendButton" type="button" disabled aria-label="Send message">↑</button>
+          </div>
+        </div>
+        <p class="disclaimer">Predictions are generated by a machine learning model and may not always be accurate.</p>
+      </div>
     </section>
-</main>
-<script src="/js/script.js"></script>
+  </main>
+  <script src="/js/script.js" defer></script>
 </body>
 </html>
-
